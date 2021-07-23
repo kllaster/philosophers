@@ -29,11 +29,12 @@ typedef struct				s_table {
 typedef struct				s_philo {
 	pthread_mutex_t			*right_fork;
 	pthread_mutex_t			*left_fork;
-	pthread_mutex_t			*mutex_death;
+	pthread_mutex_t			*print;
 	t_table					*s_table;
 	int64_t					last_eat;
 	int64_t					end_sleap;
 	int64_t					time_death;
+	int32_t					timeout;
 	int32_t 				actual_count_eat;
 	int16_t					id;
 }							t_philo;
@@ -48,4 +49,5 @@ void						*monitor(void *data);
 int8_t						create_table(t_table *s_table);
 int64_t						ft_atoi(const char *str);
 int64_t						time_unix_ms();
+void						timeout(int64_t to_time);
 #endif

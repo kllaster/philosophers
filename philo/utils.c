@@ -1,6 +1,6 @@
 #include "philo.h"
 
-int64_t			ft_atoi(const char *str)
+int64_t	ft_atoi(const char *str)
 {
 	unsigned int	res;
 	int				sign;
@@ -22,10 +22,22 @@ int64_t			ft_atoi(const char *str)
 	return ((int)res * sign);
 }
 
-int64_t			time_unix_ms(void)
+int64_t	time_unix_ms(void)
 {
 	struct timeval	s_time;
 
 	gettimeofday(&s_time, NULL);
 	return (s_time.tv_sec * 1000 + (int)(s_time.tv_usec * 0.001));
+}
+
+void	timeout(int64_t to_time)
+{
+	int64_t	time;
+
+	while (1)
+	{
+		time = time_unix_ms();
+		if (to_time <= time)
+			break ;
+	}
 }
