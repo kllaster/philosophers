@@ -46,6 +46,7 @@ typedef struct				s_monitor {
 
 void						*philo(void *data);
 void						*monitor(void *data);
+void						free_struct(pthread_t *threads, t_monitor *s_monitor);
 int8_t						create_table(t_table *s_table);
 int64_t						ft_atoi(const char *str);
 int64_t						time_unix_ms();

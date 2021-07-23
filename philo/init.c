@@ -1,50 +1,40 @@
 #include "philo.h"
 
-void free_struct(pthread_t *threads, t_monitor *s_monitor)
+int8_t	init_philo_fields(int32_t i, t_philo *s_arr_philo)
 {
-	int i;
-
-	i = -1;
-	pthread_mutex_destroy(s_monitor->s_arr_philo[0].print);
-	while (++i < s_monitor->s_table->num_philo)
-	{
-		pthread_mutex_destroy(s_monitor->s_arr_philo[i].left_fork);
-		free(s_monitor->s_arr_philo[i].left_fork);
-	}
-	free(threads);
-	free(s_monitor->s_arr_philo);
-	free(s_monitor);
+	s_arr_philo[i].id = i + 1;
+	s_arr_philo[i].timeout = 1;
+	if (s_arr_philo[i].id % 2 == 0)
+		s_arr_philo[i].timeout = 30;
+	s_arr_philo[i].print = s_arr_philo[0].print;
+	s_arr_philo[i].left_fork = malloc(sizeof(pthread_mutex_t));
+	if (!s_arr_philo[i].left_fork ||
+		pthread_mutex_init(s_arr_philo[i].left_fork, NULL) != 0)
+		return (-1);
+	return (0);
 }
 
-int8_t init_philo(pthread_t *threads, t_table *s_table, t_philo *s_arr_philo)
+int8_t	init_philo(pthread_t *threads, t_table *s_table, t_philo *s_arr_philo)
 {
 	int i;
 
-	if (!(s_arr_philo[0].print = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t))))
+	s_arr_philo[0].print = malloc(sizeof(pthread_mutex_t));
+	if (!s_arr_philo[0].print ||
+		pthread_mutex_init(s_arr_philo[0].print, NULL) != 0)
 		return (-1);
-	if (pthread_mutex_init(s_arr_philo[0].print, NULL) != 0)
-		return (-1);
-	i = 0;
-	while (++i <= s_table->num_philo)
+	i = -1;
+	while (++i < s_table->num_philo)
 	{
-		s_arr_philo[i - 1].id = i;
-		s_arr_philo[i - 1].timeout = 1;
-		if (s_arr_philo[i - 1].id % 2 == 0)
-			s_arr_philo[i - 1].timeout = 5;
-		s_arr_philo[i - 1].s_table = s_table;
-		if (pthread_create(&(threads[i]), NULL, philo, &(s_arr_philo[i - 1])) != 0)
+		s_arr_philo[i].s_table = s_table;
+		if (pthread_create(&(threads[i + 1]), NULL, philo, &(s_arr_philo[i])) != 0 ||
+			pthread_detach(threads[i + 1]) != 0)
 			return (-1);
-		if (pthread_detach(threads[i]) != 0)
+		if (init_philo_fields(i, s_arr_philo) != 0)
 			return (-1);
-		s_arr_philo[i - 1].print = s_arr_philo[0].print;
-		if (!(s_arr_philo[i - 1].left_fork = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t))))
-			return (-1);
-		if (pthread_mutex_init(s_arr_philo[i - 1].left_fork, NULL) != 0)
-			return (-1);
-		if ((i - 1) != 0)
-			s_arr_philo[i - 1].right_fork = s_arr_philo[i - 2].left_fork;
-		if (i == s_table->num_philo)
-			s_arr_philo[0].right_fork = s_arr_philo[i - 1].left_fork;
+		if (i != 0)
+			s_arr_philo[i].right_fork = s_arr_philo[i - 1].left_fork;
+		if (i + 1 == s_table->num_philo)
+			s_arr_philo[0].right_fork = s_arr_philo[i].left_fork;
 	}
 	return (0);
 }
@@ -64,7 +54,8 @@ int8_t	init_monitor(pthread_t *threads, t_table *s_table, t_monitor *s_monitor)
 int8_t	init_table(pthread_t *threads, t_table *s_table, t_monitor *s_monitor)
 {
 	memset(s_monitor, 0, sizeof(t_monitor));
-	if (!(s_monitor->s_arr_philo = (t_philo *)malloc(sizeof(t_philo) * s_table->num_philo)))
+	s_monitor->s_arr_philo = malloc(sizeof(t_philo) * s_table->num_philo);
+	if (!s_monitor->s_arr_philo)
 	{
 		free(threads);
 		free(s_monitor);
@@ -79,19 +70,22 @@ int8_t	create_table(t_table *s_table)
 	pthread_t	*threads;
 	t_monitor	*s_monitor;
 
-	if (!(threads = (pthread_t *)malloc(sizeof(pthread_t) * (s_table->num_philo + 1))))
+	threads = malloc(sizeof(pthread_t) * (s_table->num_philo + 1));
+	if (!threads)
 		return (-1);
-	if (!(s_monitor = (t_monitor *)malloc(sizeof(t_monitor))))
+	s_monitor = malloc(sizeof(t_monitor));
+	if (!s_monitor)
 	{
 		free(threads);
 		return (-1);
 	}
-	if (init_table(threads, s_table, s_monitor) == -1)
+	if (init_table(threads, s_table, s_monitor) == -1 ||
+		init_philo(threads, s_table, s_monitor->s_arr_philo) == -1 ||
+		init_monitor(threads, s_table, s_monitor) == -1)
+	{
+		free_struct(threads, s_monitor);
 		return (-1);
-	if (init_philo(threads, s_table, s_monitor->s_arr_philo) == -1)
-		return (-1);
-	if (init_monitor(threads, s_table, s_monitor) == -1)
-		return (-1);
+	}
 	printf("Create table: %sOK%s\n", CGRN, CNRM);
 	pthread_join(threads[0], NULL);
 	free_struct(threads, s_monitor);

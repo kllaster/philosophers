@@ -6,7 +6,7 @@ ifeq ($(DEBUG), 1)
 	DEBUG_FLAGS	= -fsanitize=address -g
 endif
 CFLAGS		= -Wall -Wextra -Werror -MMD $(DEBUG_FLAGS)
-CPPFLAGS	= $(CFLAGS)
+CPPFLAGS	= $(CFLAGS) -march=native -flto -pipe
 HEADERS		= /
 
 SRCS =	main.c\
