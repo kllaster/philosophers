@@ -2,22 +2,8 @@
 
 void	free_struct(pthread_t *threads, t_monitor *s_monitor)
 {
-	int i;
-
-	i = -1;
-	if (s_monitor->s_arr_philo[0].print)
-	{
-		pthread_mutex_destroy(s_monitor->s_arr_philo[0].print);
-		free(s_monitor->s_arr_philo[0].print);
-	}
-	if (s_monitor->s_arr_philo) while (++i < s_monitor->s_table->num_philo)
-		{
-			if (s_monitor->s_arr_philo[i].left_fork)
-			{
-				pthread_mutex_destroy(s_monitor->s_arr_philo[i].left_fork);
-				free(s_monitor->s_arr_philo[i].left_fork);
-			}
-		}
+	sem_unlink("philo_print");
+	sem_unlink("philo_forks");
 	free(threads);
 	free(s_monitor->s_arr_philo);
 	free(s_monitor);
