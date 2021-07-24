@@ -1,19 +1,8 @@
 #include "philo.h"
 
-int8_t	init_philo_fields(int32_t i, t_philo *s_arr_philo)
+void	init_philo(t_table *s_table, t_philo *s_arr_philo)
 {
-	s_arr_philo[i].id = i + 1;
-	s_arr_philo[i].timeout = 1;
-	if (s_arr_philo[i].id % 2 == 0)
-		s_arr_philo[i].timeout = 30;
-	s_arr_philo[i].print = s_arr_philo[0].print;
-	s_arr_philo[i].forks = s_arr_philo[0].forks;
-	return (0);
-}
-
-int8_t	init_philo(pthread_t *threads, t_table *s_table, t_philo *s_arr_philo)
-{
-	int i;
+	int16_t	i;
 
 	sem_unlink("philo_print");
 	s_arr_philo[0].print = sem_open("philo_print", O_CREAT | O_EXCL, 0644, 1);
@@ -23,33 +12,27 @@ int8_t	init_philo(pthread_t *threads, t_table *s_table, t_philo *s_arr_philo)
 	while (++i < s_table->num_philo)
 	{
 		s_arr_philo[i].s_table = s_table;
-		if (pthread_create(&(threads[i + 1]), NULL, philo, &(s_arr_philo[i])) != 0 ||
-			pthread_detach(threads[i + 1]) != 0)
-			return (-1);
-		init_philo_fields(i, s_arr_philo);
+		s_arr_philo[i].id = i + 1;
+		s_arr_philo[i].timeout = 100;
+		s_arr_philo[i].print = s_arr_philo[0].print;
+		s_arr_philo[i].forks = s_arr_philo[0].forks;
 	}
-	return (0);
 }
 
-int8_t	init_monitor(pthread_t *threads, t_table *s_table, t_monitor *s_monitor)
+int8_t	init_table(t_table *s_table, t_monitor *s_monitor)
 {
+	memset(s_monitor, 0, sizeof(t_monitor));
 	s_monitor->s_table = s_table;
-	if (pthread_create(&(threads[0]), NULL, monitor, s_monitor) != 0)
+	s_monitor->s_processes = malloc(sizeof(t_processes));
+	if (s_monitor->s_processes == NULL)
 	{
-		free(threads);
 		free(s_monitor);
 		return (-1);
 	}
-	return (0);
-}
-
-int8_t	init_table(pthread_t *threads, t_table *s_table, t_monitor *s_monitor)
-{
-	memset(s_monitor, 0, sizeof(t_monitor));
 	s_monitor->s_arr_philo = malloc(sizeof(t_philo) * s_table->num_philo);
-	if (!s_monitor->s_arr_philo)
+	if (s_monitor->s_arr_philo == NULL)
 	{
-		free(threads);
+		free(s_monitor->s_processes);
 		free(s_monitor);
 		return (-1);
 	}
@@ -57,29 +40,51 @@ int8_t	init_table(pthread_t *threads, t_table *s_table, t_monitor *s_monitor)
 	return (0);
 }
 
+void	init_processes(t_monitor *s_monitor)
+{
+	int16_t		i;
+	t_processes	*s_processes;
+
+	i = -1;
+	s_processes = s_monitor->s_processes;
+	while (++i < s_monitor->s_table->num_philo)
+	{
+		s_monitor->s_arr_philo[i].last_eat = s_monitor->s_arr_philo[i].s_table->start_table;
+		if (!(s_processes->pid = fork()))
+			philo(&(s_monitor->s_arr_philo[i]));
+		else if (s_processes->pid < 0)
+			exit(3);
+		if ((i + 1) < s_monitor->s_table->num_philo)
+		{
+			s_processes->next = malloc(sizeof(t_processes));
+			if (s_processes->next == NULL)
+				exit(4);
+			s_processes = s_processes->next;
+			s_processes->next = NULL;
+		}
+	}
+}
+
 int8_t	create_table(t_table *s_table)
 {
-	pthread_t	*threads;
+	int16_t		i;
 	t_monitor	*s_monitor;
 
-	threads = malloc(sizeof(pthread_t) * (s_table->num_philo + 1));
-	if (!threads)
-		return (-1);
 	s_monitor = malloc(sizeof(t_monitor));
-	if (!s_monitor)
+	if (s_monitor == NULL)
+		return (-1);
+	if (init_table(s_table, s_monitor) == -1)
 	{
-		free(threads);
+		free_struct(s_monitor);
 		return (-1);
 	}
-	if (init_table(threads, s_table, s_monitor) == -1 ||
-		init_philo(threads, s_table, s_monitor->s_arr_philo) == -1 ||
-		init_monitor(threads, s_table, s_monitor) == -1)
-	{
-		free_struct(threads, s_monitor);
-		return (-1);
-	}
+	init_philo(s_table, s_monitor->s_arr_philo);
+	s_monitor->s_table->start_table = time_unix_ms();
 	printf("Create table: %sOK%s\n", CGRN, CNRM);
-	pthread_join(threads[0], NULL);
-	free_struct(threads, s_monitor);
+	init_processes(s_monitor);
+	i = -1;
+	while (++i < s_monitor->s_table->num_philo) if (waitpid(-1, NULL, 0) < 0)
+			exit(5);
+	free_struct(s_monitor);
 	return (0);
 }

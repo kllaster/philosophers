@@ -4,10 +4,10 @@
 # include <unistd.h>
 # include <stdio.h>
 # include <stdlib.h>
-# include <pthread.h>
 # include <semaphore.h>
 # include <sys/time.h>
 # include <string.h>
+# include <signal.h>
 
 #define CNRM  "\x1B[0m"
 #define CRED  "\x1B[31m"
@@ -39,14 +39,20 @@ typedef struct				s_philo {
 	int16_t					id;
 }							t_philo;
 
+typedef struct				s_processes
+{
+	pid_t					pid;
+	void					*next;
+}							t_processes;
+
 typedef struct				s_monitor {
 	t_philo					*s_arr_philo;
 	t_table					*s_table;
+	t_processes				*s_processes;
 }							t_monitor;
 
 void						*philo(void *data);
-void						*monitor(void *data);
-void						free_struct(pthread_t *threads, t_monitor *s_monitor);
+void						free_struct(t_monitor *s_monitor);
 int8_t						create_table(t_table *s_table);
 int64_t						ft_atoi(const char *str);
 int64_t						time_unix_ms();

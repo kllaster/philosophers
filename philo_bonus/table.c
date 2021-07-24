@@ -38,76 +38,22 @@ void	*philo(void *data)
 	{
 		if (!s_philo->s_table->start_table)
 			continue ;
-		if (s_philo->timeout)
-		{
-			s_philo->last_eat = s_philo->s_table->start_table;
-			timeout(s_philo->timeout + time_unix_ms());
-			s_philo->timeout = 0;
-		}
 		if (s_philo->time_death)
-			return ((void *)"died");
+			exit(1);
 		sem_wait(s_philo->forks);
 		print_status(s_philo, "philo has taken fork", CCYN);
 		sem_wait(s_philo->forks);
 		print_status(s_philo, "philo has taken fork", CCYN);
-		if (life(s_philo))
-			return ((void *)"full");
-	}
-}
-
-void	waiting_threads(t_monitor *s_monitor)
-{
-	int		id_philo;
-	t_philo	*s_philo;
-
-	id_philo = -1;
-	while (++id_philo < s_monitor->s_table->num_philo)
-	{
-		s_philo = &(s_monitor->s_arr_philo[id_philo]);
-		if (s_philo->timeout != 0)
+		if ((s_philo->s_table->time_life + s_philo->last_eat) <= time_unix_ms())
 		{
-			while (1)
-			{
-				if (s_philo->timeout == 0)
-					break ;
-			}
-		}
-	}
-}
-
-void	*monitor(void *data)
-{
-	t_monitor	*s_monitor;
-	t_philo		*s_philo;
-	int64_t 	actual_eat;
-	int64_t		time;
-	int16_t 	id_philo;
-
-	s_monitor = (t_monitor *)data;
-	s_monitor->s_table->start_table = time_unix_ms();
-	waiting_threads(s_monitor);
-	while (1)
-	{
-		id_philo = -1;
-		time = time_unix_ms();
-		actual_eat = s_monitor->s_table->num_count_eat;
-		while (++id_philo < s_monitor->s_table->num_philo)
-		{
-			s_philo = &(s_monitor->s_arr_philo[id_philo]);
 			sem_wait(s_philo->print);
-			if (s_philo->actual_count_eat != s_philo->s_table->num_count_eat)
-				actual_eat = 0;
-			if ((s_philo->s_table->time_life + s_philo->last_eat) <= time)
-			{
-				s_philo->time_death = time;
-				printf("%llu : %d. %sphilo died%s\n",
-					   (time - s_philo->s_table->start_table),
-					   s_philo->id, CRED, CNRM);
-				return ((void *)"death one philo");
-			}
-			sem_post(s_philo->print);
+			s_philo->time_death = time_unix_ms();
+			printf("%llu : %d. %sphilo died%s\n",
+				   (s_philo->time_death - s_philo->s_table->start_table),
+				   s_philo->id, CRED, CNRM);
+			exit(2);
 		}
-		if (actual_eat != 0)
-			return ((void *)"all philo are full");
+		if (life(s_philo))
+			exit(3);
 	}
 }

@@ -53,5 +53,6 @@ dkms.conf
 
 # Project
 philo/philo
+philo_bonus/philo_bonus
 .idea
 .DS_Store

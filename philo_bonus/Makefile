@@ -1,12 +1,12 @@
-NAME		= philo
+NAME		= philo_bonus
 CC			= gcc
 RM			= rm -f
-DEBUG		= 1
+DEBUG		= 0
 ifeq ($(DEBUG), 1)
 	DEBUG_FLAGS	= -fsanitize=address -g
 endif
 CFLAGS		= -Wall -Wextra -Werror -MMD $(DEBUG_FLAGS)
-CPPFLAGS	= $(CFLAGS)
+CPPFLAGS	= $(CFLAGS) -march=native -flto -pipe
 HEADERS		= /
 
 SRCS =	main.c\

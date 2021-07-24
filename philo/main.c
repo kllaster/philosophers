@@ -40,7 +40,8 @@ int	main(int argc, char *argv[])
 
 	if (!(argc == 5 || argc == 6))
 		return (1);
-	if (!(s_table = (t_table *)malloc(sizeof(t_table))))
+	s_table = (t_table *)malloc(sizeof(t_table));
+	if (s_table == NULL)
 		return (-1);
 	memset(s_table, 0, sizeof(t_table));
 	printf("Parse params: %sOK%s\n", CGRN, CNRM);
