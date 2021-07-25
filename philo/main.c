@@ -15,10 +15,11 @@ int8_t	check_params(t_table *s_table)
 	return (0);
 }
 
-void parse_params(int argc, char *argv[], t_table *s_table)
+void	parse_params(int argc, char *argv[], t_table *s_table)
 {
-	int i = 0;
+	int	i;
 
+	i = 0;
 	while (++i < argc)
 	{
 		if (i == 1)
