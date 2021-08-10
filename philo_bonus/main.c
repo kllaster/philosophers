@@ -20,6 +20,7 @@ void	parse_params(int argc, char *argv[], t_table *s_table)
 	int	i;
 
 	i = 0;
+	memset(s_table, 0, sizeof(t_table));
 	while (++i < argc)
 	{
 		if (i == 1)
@@ -40,11 +41,13 @@ int	main(int argc, char *argv[])
 	t_table	*s_table;
 
 	if (!(argc == 5 || argc == 6))
+	{
+		printf("Parse params: %sX%s\n", CRED, CNRM);
 		return (1);
+	}
 	s_table = malloc(sizeof(t_table));
 	if (s_table == NULL)
 		return (-1);
-	memset(s_table, 0, sizeof(t_table));
 	printf("Parse params: %sOK%s\n", CGRN, CNRM);
 	parse_params(argc, argv, s_table);
 	if (check_params(s_table) == -1)

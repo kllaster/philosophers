@@ -5,7 +5,7 @@ int8_t	init_philo_fields(int32_t i, t_philo *s_arr_philo)
 	s_arr_philo[i].id = i + 1;
 	s_arr_philo[i].timeout = 1;
 	if (s_arr_philo[i].id % 2 == 0)
-		s_arr_philo[i].timeout = 30;
+		s_arr_philo[i].timeout = 20;
 	s_arr_philo[i].print = s_arr_philo[0].print;
 	s_arr_philo[i].left_fork = malloc(sizeof(pthread_mutex_t));
 	if (s_arr_philo[i].left_fork == NULL

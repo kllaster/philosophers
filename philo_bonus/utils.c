@@ -50,3 +50,16 @@ int64_t	time_unix_ms(void)
 	gettimeofday(&s_time, NULL);
 	return (s_time.tv_sec * 1000 + (int)(s_time.tv_usec * 0.001));
 }
+
+void	timeout(int64_t to_time)
+{
+	int64_t	time;
+
+	while (1)
+	{
+		time = time_unix_ms();
+		if (to_time <= time)
+			break ;
+		usleep(100);
+	}
+}
