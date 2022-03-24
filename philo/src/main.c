@@ -40,7 +40,10 @@ int	main(int argc, char *argv[])
 	t_table	*s_table;
 
 	if (!(argc == 5 || argc == 6))
+	{
+		printf("Parse params: %sX%s\n", CRED, CNRM);
 		return (1);
+	}
 	s_table = (t_table *)malloc(sizeof(t_table));
 	if (s_table == NULL)
 		return (-1);

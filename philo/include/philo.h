@@ -51,4 +51,5 @@ int64_t					ft_atoi(const char *str);
 int64_t					time_unix_ms(void);
 void					timeout(int64_t to_time);
 void					print_status(t_philo *s_philo, char *text, char *color);
+
 #endif
