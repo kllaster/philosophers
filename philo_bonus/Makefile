@@ -1,41 +1,52 @@
-NAME		= philo_bonus
-CC			= gcc
-RM			= rm -f
-DEBUG		= 0
+NAME			= philo_bonus
+CC				= gcc
+RM				= rm -f
+MKDIR			= mkdir -p
+DEBUG			= 0
+
 ifeq ($(DEBUG), 1)
-	DEBUG_FLAGS	= -fsanitize=address -g
+	DEBUG_FLAGS	= -g -fsanitize=address
+else
+	DEBUG_FLAGS	=
 endif
-CFLAGS		= -Wall -Wextra -Werror -MMD $(DEBUG_FLAGS)
-CPPFLAGS	= $(CFLAGS) -march=native -flto -pipe
-HEADERS		= /
 
-SRCS =	main.c\
-		init.c\
-		table.c\
-		utils.c\
+PROTECT_FLAGS	= -fno-exceptions -fstack-protector-all
+COMMON_FLAGS	= -std=c99 -Wall -Wextra -Werror -Wfloat-equal -MMD -pipe
+CFLAGS			= $(COMMON_FLAGS) $(DEBUG_FLAGS) $(PROTECT_FLAGS)
 
-OBJS = $(SRCS:.c=.o)
+BIN_DIR			= ./
+SRC_DIR			= ./src
+BUILD_DIR		= ./build
+HEADS			= ./include
 
-$(NAME):		$(OBJS)
-				$(CC) $(CPPFLAGS) -I $(HEADERS) $(OBJS) -o $(NAME)
+SRCS 			= ./src/main.c\
+				  ./src/init.c\
+				  ./src/table.c\
+				  ./src/utils.c\
+
+OBJS			= $(notdir $(SRCS))
+OBJS			:= $(subst $(SRC_DIR), $(BUILD_DIR), $(SRCS:%.c=%.o))
+NAME			:= $(addprefix $(BIN_DIR), $(NAME))
+DEPS			= $(OBJS:.o=.d)
+VPATH			= $(SRC_DIR):$(HEADS):$(BUILD_DIR)
 
 all:			$(NAME)
 
-.c.o:
-				$(CC) $(CPPFLAGS) -I $(HEADERS) -o $@ -c $<
+$(NAME):		$(OBJS) $(LIBFT) $(GNL)
+				$(CC) $(CFLAGS) -I $(HEADS) $(OBJS) $(LIBS) -o $(NAME)
 
-$(OBJS):		$(HEADERS)
+$(BUILD_DIR)/%.o:  $(SRC_DIR)/%.c
+				@if [ ! -d $(dir $@) ] ; then $(MKDIR) $(dir $@); fi
+				$(CC) $(CFLAGS) -I $(HEADS) -c $< -o $@
 
 clean:
 				$(RM) $(OBJS)
-				$(RM) $(OBJS:.o=.d)
+				$(RM) $(DEPS)
 
 fclean:			clean
 				$(RM) $(NAME)
 
 re:				fclean all
 
-re_pr:			clean all
-
-.PHONY:			all clean fclean re re_pr
-.SILENT:
+-include $(DEPS)
+.PHONY:			all, clean, fclean, re
